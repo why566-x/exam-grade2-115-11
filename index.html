@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>段考引導式自主訂正網頁（翠翎老師設計）</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- KaTeX CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Fonts: Zen Maru Gothic & Fredoka for Cozy Hand-Drawn Look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Zen Maru Gothic"', 'Fredoka', 'sans-serif'],
+          },
+          colors: {
+            cozy: {
+              bg: '#fbf7f0',          /* Warm Cream Paper Background */
+              card: '#fffdfa',        /* Soft Warm White Card */
+              border: '#e8dbca',      /* Gentle Hand-drawn Border */
+              text: '#4a3e3d',        /* Warm Soft Dark Charcoal */
+              terracotta: '#e07a5f',  /* Soft Warm Red-Orange */
+              sage: '#81b29a',        /* Warm Gentle Sage Green */
+              amber: '#f2cc8f',       /* Warm Honey Yellow */
+              navy: '#3d405b',        /* Warm Slate Navy */
+            }
+          },
+          boxShadow: {
+            'doodle': '3px 4px 0px 0px rgba(74, 62, 61, 0.12)',
+            'doodle-sm': '2px 2px 0px 0px rgba(74, 62, 61, 0.1)',
+            'doodle-lg': '4px 6px 0px 0px rgba(74, 62, 61, 0.15)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #fbf7f0;
+      color: #4a3e3d;
+      background-image: radial-gradient(#e8dbca 0.75px, transparent 0.75px);
+      background-size: 16px 16px;
+    }
+
+    /* Custom Cozy Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f5ece0;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #d6c4b0;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #beaa94;
+    }
+
+    .katex-display {
+      margin: 0.5em 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 2px 0;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header Header Header (Cozy Hand-Drawn Notebook Header) -->
+  <header class="bg-cozy-navy text-white border-b-4 border-amber-900/20 sticky top-0 z-30 shadow-doodle">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-cozy-terracotta p-2.5 rounded-2xl text-white shadow-doodle-sm transform -rotate-2">
+          <span class="text-2xl">✏️</span>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-black tracking-wide text-amber-100 flex items-center gap-2">
+              段考引導式自主訂正網頁
+            </h1>
+            <span class="text-xs bg-amber-200/20 text-amber-200 border border-amber-300/40 px-2 py-0.5 rounded-full font-medium">
+              翠翎老師設計
+            </span>
+            <!-- Added Annotation Tag -->
+            <span class="text-xs bg-cozy-terracotta/90 text-white font-bold px-2.5 py-0.5 rounded-full shadow-doodle-sm animate-pulse">
+              📖 搭配紙本考卷
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 mt-0.5">國二數學第一學期第一次段考 • 蘇格拉底對話引導教練</p>
+        </div>
+      </div>
+
+      <!-- Progress Badge -->
+      <div class="hidden sm:flex items-center space-x-4 bg-white/10 px-4 py-2 rounded-2xl border border-white/20 backdrop-blur-xs">
+        <div class="text-right">
+          <div class="text-[11px] text-amber-200/90 font-medium">訂正進度</div>
+          <div class="text-sm font-bold text-emerald-300"><span id="completed-count">0</span> / 26 題</div>
+        </div>
+        <div class="w-24 bg-slate-700/80 rounded-full h-3 overflow-hidden border border-amber-100/30">
+          <div id="progress-bar" class="bg-cozy-sage h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+    <!-- Top Question Nav Bar (Styled as cute stickies/tags) -->
+    <section class="bg-cozy-card rounded-3xl shadow-doodle border-2 border-cozy-border p-4 sm:p-5 relative">
+      <!-- Tape Effect Decoration -->
+      <div class="absolute -top-3 left-8 w-24 h-6 bg-amber-200/70 opacity-80 transform -rotate-2 border border-amber-300/50 rounded-xs pointer-events-none"></div>
+      <div class="absolute -top-3 right-12 w-20 h-6 bg-rose-200/70 opacity-80 transform rotate-3 border border-rose-300/50 rounded-xs pointer-events-none"></div>
+
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+        <div class="flex items-center space-x-2 text-xs font-bold text-cozy-text">
+          <span class="text-base">📌</span>
+          <span>選擇題目開始訂正（共 26 題）：</span>
+          <span class="text-[11px] bg-cozy-amber/40 text-amber-900 px-2 py-0.5 rounded-full border border-amber-400/40">
+            請配合桌上【紙本考卷】對照題號
+          </span>
+        </div>
+        <div class="flex items-center space-x-3 text-xs">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white border-2 border-cozy-border inline-block"></span> 未開始</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cozy-terracotta inline-block"></span> 訂正中</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cozy-sage inline-block"></span> 已通關 🌟</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Nav Buttons -->
+      <div class="space-y-3 pt-1">
+        <!-- 選擇題 -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold text-cozy-navy w-16 shrink-0 bg-amber-100/80 border border-amber-200 px-2 py-1 rounded-xl text-center shadow-2xs">
+            選擇題
+          </span>
+          <div id="choice-buttons" class="flex flex-wrap gap-1.5 flex-1">
+            <!-- Dynamic JS injected -->
+          </div>
+        </div>
+
+        <!-- 填充題 -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold text-cozy-navy w-16 shrink-0 bg-emerald-100/80 border border-emerald-200 px-2 py-1 rounded-xl text-center shadow-2xs">
+            填充題
+          </span>
+          <div id="fill-buttons" class="flex flex-wrap gap-1.5 flex-1">
+            <!-- Dynamic JS injected -->
+          </div>
+        </div>
+
+        <!-- 綜合題 -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold text-cozy-navy w-16 shrink-0 bg-rose-100/80 border border-rose-200 px-2 py-1 rounded-xl text-center shadow-2xs">
+            綜合題
+          </span>
+          <div id="comp-buttons" class="flex flex-wrap gap-1.5 flex-1">
+            <!-- Dynamic JS injected -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content Workspace Split: Left (Handmade Mind Guide) & Right (AI Coach) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+
+      <!-- LEFT PANEL: 三步思維導航手帳 (col-span-5) -->
+      <section class="lg:col-span-5 bg-cozy-card rounded-3xl shadow-doodle border-2 border-cozy-border overflow-hidden flex flex-col h-full">
+        
+        <!-- Left Panel Header -->
+        <div class="bg-amber-50/80 border-b-2 border-cozy-border p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span id="current-type-badge" class="px-3 py-1 text-xs font-bold rounded-full bg-cozy-terracotta text-white shadow-2xs">
+              選擇題
+            </span>
+            <h2 id="current-question-title" class="text-lg font-bold text-cozy-text">
+              第 1 題
+            </h2>
+          </div>
+          <!-- Show Answer Toggle Button -->
+          <div class="flex items-center space-x-2">
+            <button id="toggle-answer-btn" onclick="toggleAnswer()" class="text-xs px-3 py-1.5 bg-white border-2 border-cozy-border hover:bg-amber-100/60 text-cozy-text rounded-xl font-bold transition flex items-center gap-1 shadow-doodle-sm">
+              <span>🔍 顯示解答</span>
+            </button>
+            <div id="answer-box" class="hidden text-xs font-bold px-3 py-1.5 bg-emerald-100 text-emerald-900 border-2 border-emerald-300 rounded-xl shadow-doodle-sm animate-fade-in">
+              正解：<span id="current-answer-text">(A)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Left Panel Content Body -->
+        <div class="p-5 space-y-5 overflow-y-auto max-h-[680px]">
+
+          <!-- 【第一步・破題關鍵字與審題指引】 -->
+          <div class="bg-amber-50/60 rounded-2xl p-4 border-2 border-dashed border-amber-300 space-y-2 relative">
+            <div class="flex items-center space-x-2 text-amber-950 font-bold text-sm">
+              <span class="w-6 h-6 rounded-full bg-cozy-terracotta text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">1</span>
+              <span>第一步・破題關鍵字與審題指引</span>
+            </div>
+            <div class="text-sm text-cozy-text pl-8 space-y-2">
+              <p id="step1-keywords" class="font-bold text-cozy-text">破題關鍵字：乘法公式、差的平方展開。</p>
+              
+              <!-- Paper Exam Guidance Box -->
+              <div id="step1-paper-guide" class="hidden bg-rose-50 border-2 border-rose-200 p-3 text-xs text-rose-900 rounded-xl space-y-1 shadow-2xs">
+                <div class="font-bold flex items-center gap-1 text-rose-950">
+                  <span>📖 搭配紙本考卷對照提醒：</span>
+                </div>
+                <p id="step1-paper-guide-text" class="leading-relaxed">請對照桌上紙本考卷對應圖表或情境文字敘述。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 【第二步・核心概念與公式】 (Collapsible) -->
+          <div class="bg-emerald-50/40 rounded-2xl border-2 border-cozy-border overflow-hidden">
+            <button onclick="toggleConcept()" class="w-full p-4 flex items-center justify-between text-left hover:bg-emerald-50/80 transition">
+              <div class="flex items-center space-x-2 text-cozy-text font-bold text-sm">
+                <span class="w-6 h-6 rounded-full bg-cozy-sage text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">2</span>
+                <span>第二步・核心概念與公式</span>
+              </div>
+              <div class="flex items-center space-x-1 text-xs text-emerald-800 font-bold bg-white px-2.5 py-1 rounded-full border border-emerald-200">
+                <span id="concept-toggle-text">展開觀念手帳</span>
+                <svg id="concept-toggle-icon" class="w-4 h-4 transition-transform duration-200 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </button>
+            <div id="step2-concept-box" class="hidden p-4 pt-0 border-t-2 border-cozy-border bg-white/80 text-sm text-cozy-text space-y-2">
+              <ul id="step2-formula-list" class="list-disc list-inside space-y-2 pl-2 text-cozy-text leading-relaxed pt-3">
+                <!-- Formula items rendered via JS -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- 【第三步・拆解式引導問句】 -->
+          <div class="bg-indigo-50/40 rounded-2xl p-4 border-2 border-cozy-border space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2 text-cozy-navy font-bold text-sm">
+                <span class="w-6 h-6 rounded-full bg-cozy-navy text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">3</span>
+                <span>第三步・拆解式思考引導</span>
+              </div>
+              <span class="text-[11px] text-cozy-navy bg-white px-2.5 py-0.5 rounded-full font-bold border border-indigo-200">
+                💭 關鍵思考
+              </span>
+            </div>
+
+            <div class="space-y-3 text-sm text-cozy-text">
+              <div class="p-3 bg-white rounded-xl border-2 border-indigo-100 shadow-2xs">
+                <div class="font-bold text-cozy-navy text-xs mb-1">思考問句一：</div>
+                <div id="step3-q1" class="text-cozy-text leading-relaxed">
+                  <!-- Question 1 -->
+                </div>
+              </div>
+
+              <div class="p-3 bg-white rounded-xl border-2 border-indigo-100 shadow-2xs">
+                <div class="font-bold text-cozy-navy text-xs mb-1">思考問句二：</div>
+                <div id="step3-q2" class="text-cozy-text leading-relaxed">
+                  <!-- Question 2 -->
+                </div>
+              </div>
+            </div>
+
+            <p class="text-xs text-amber-900 font-medium italic text-right pt-1">
+              💡 請在右側對話框回覆你的想法，翠翎老師的 AI 教練會一步步指引你！
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: AI 專屬教練對話框 (col-span-7) -->
+      <section class="lg:col-span-7 bg-cozy-card rounded-3xl shadow-doodle border-2 border-cozy-border overflow-hidden flex flex-col h-[680px]">
+        
+        <!-- Chat Header -->
+        <div class="bg-cozy-navy text-white p-4 border-b-2 border-amber-900/20 flex items-center justify-between shrink-0">
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <div class="w-10 h-10 rounded-2xl bg-amber-300 border-2 border-white flex items-center justify-center text-xl shadow-doodle-sm transform -rotate-3">
+                🤖
+              </div>
+              <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-cozy-navy rounded-full"></span>
+            </div>
+            <div>
+              <div class="font-bold text-base text-amber-100 flex items-center gap-2">
+                <span>AI 數理學習教練</span>
+                <span class="text-[10px] bg-amber-400/20 text-amber-200 border border-amber-300/30 px-2 py-0.2 rounded-full font-medium">Gemini 3 Flash</span>
+              </div>
+              <p class="text-xs text-slate-300">蘇格拉底對話式引導 • 引導自主思考</p>
+            </div>
+          </div>
+          <button onclick="resetChatHistory()" title="重置本題對話" class="text-xs text-amber-100 hover:text-white px-3 py-1.5 rounded-xl border-2 border-amber-200/30 hover:bg-white/10 transition flex items-center gap-1 font-bold">
+            <span>🔄 重置對話</span>
+          </button>
+        </div>
+
+        <!-- Chat Scroll Area -->
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 bg-[#fdfbf7]">
+          <!-- Chat bubbles injected dynamically -->
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="ai-loading" class="hidden px-4 py-2 bg-amber-50/80 border-t border-cozy-border flex items-center space-x-2 text-xs text-cozy-navy font-bold">
+          <div class="flex space-x-1">
+            <div class="w-2 h-2 bg-cozy-terracotta rounded-full animate-bounce" style="animation-delay: 0s"></div>
+            <div class="w-2 h-2 bg-cozy-terracotta rounded-full animate-bounce" style="animation-delay: 0.15s"></div>
+            <div class="w-2 h-2 bg-cozy-terracotta rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+          </div>
+          <span>AI 教練正認真閱讀您的思考過程...</span>
+        </div>
+
+        <!-- Dynamic Quick Action Chips -->
+        <div class="px-4 py-2.5 bg-white border-t-2 border-cozy-border flex items-center gap-2 overflow-x-auto shrink-0 text-xs">
+          <span class="text-cozy-text shrink-0 text-xs font-bold">快捷對話：</span>
+          <button onclick="quickReply('我想試著回答問句一：')" class="shrink-0 px-3 py-1 bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 text-amber-950 font-bold rounded-xl transition">
+            💡 回答問句一
+          </button>
+          <button onclick="quickReply('我想試著回答問句二：')" class="shrink-0 px-3 py-1 bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 text-amber-950 font-bold rounded-xl transition">
+            💡 回答問句二
+          </button>
+          <button onclick="quickReply('請給我一點提示！')" class="shrink-0 px-3 py-1 bg-rose-50 hover:bg-rose-100 border-2 border-rose-200 text-rose-950 font-bold rounded-xl transition">
+            ❓ 請給提示
+          </button>
+          <button onclick="quickReply('好')" class="shrink-0 px-3 py-1 bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-300 text-emerald-950 font-bold rounded-xl transition">
+            👍 挑戰平行類題
+          </button>
+          <button onclick="quickReply('下一題')" class="shrink-0 px-3 py-1 bg-slate-100 hover:bg-slate-200 border-2 border-slate-300 text-slate-800 font-bold rounded-xl transition">
+            ➡️ 下一題
+          </button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chat-form" onsubmit="handleUserSubmit(event)" class="p-3 bg-white border-t-2 border-cozy-border flex items-center space-x-2 shrink-0">
+          <input 
+            type="text" 
+            id="chat-input" 
+            placeholder="請寫下你的想法或推導算式... (例如: (-1)^2 是正數，所以不影響)"
+            autocomplete="off"
+            class="flex-1 px-4 py-3 bg-amber-50/40 border-2 border-cozy-border rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cozy-terracotta focus:bg-white transition text-cozy-text placeholder:text-slate-400"
+          />
+          <button 
+            type="submit" 
+            id="send-btn"
+            class="px-5 py-3 bg-cozy-terracotta hover:bg-rose-600 text-white text-sm font-bold rounded-2xl shadow-doodle-sm transition flex items-center gap-1 shrink-0"
+          >
+            <span>傳送</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </button>
+        </form>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer Footer -->
+  <footer class="bg-cozy-card border-t-2 border-cozy-border py-4 text-center text-xs text-cozy-text font-medium mt-auto shadow-inner">
+    段考引導式自主訂正網頁（翠翎老師設計） • 搭配紙本考卷使用 • Powered by Gemini 3 Flash & KaTeX
+  </footer>
+
+  <!-- JavaScript Core Logic -->
+  <script>
+    // ==========================================
+    // 1. Question Database (26 Items Complete)
+    // ==========================================
+    const questionDatabase = [
+      // --- 選擇題 1-10 ---
+      {
+        id: "choice-1",
+        type: "選擇題",
+        num: "第 1 題",
+        title: "選擇題 第 1 題",
+        ans: "(A)",
+        step1Keywords: "破題關鍵字：乘法公式、差的平方展開。",
+        paperGuide: null,
+        step2Formulas: [
+          "差的平方公式：$(a-b)^2 = a^2 - 2ab + b^2$",
+          "負號平方性質：$(a-b)^2 = [-(b-a)]^2 = (b-a)^2$",
+          "和的平方公式：$(a+b)^2 = a^2 + 2ab + b^2$",
+          "多項式分配律：$(a+b)(c+d) = ac + ad + bc + bd$"
+        ],
+        step3Questions: [
+          "當我們將 $(a-b)$ 提出負號寫成 $-(b-a)$ 後進行平方，負號 $(-1)^2$ 會變成什麼符號？這對式子的值有影響嗎？",
+          "請觀察選項 (B)、(C)、(D) 的展開式，它們分別漏掉了中間的哪些交叉相乘項（如 $-2ab$、$ad$ 或 $+2ab$）？"
+        ]
+      },
+      {
+        id: "choice-2",
+        type: "選擇題",
+        num: "第 2 題",
+        title: "選擇題 第 2 題",
+        ans: "(C)",
+        step1Keywords: "破題關鍵字：多項式相乘、多項式的次數。",
+        paperGuide: null,
+        step2Formulas: [
+          "若多項式 $A$ 為 $m$ 次多項式，多項式 $B$ 為 $n$ 次多項式（$m, n \\ge 0$），則乘積 $A \\times B$ 的次數為 $(m + n)$ 次。"
+        ],
+        step3Questions: [
+          "多項式相乘時，最高次項是由 $A$ 的最高次項與 $B$ 的最高次項相乘產生的，這時變數 $x$ 的指數應該相加還是相乘？",
+          "$A$ 為二次多項式（最高次項為 $x^2$），$B$ 為一次多項式（最高次項為 $x^1$），兩者最高次項相乘後，$x$ 的次方是多少？"
+        ]
+      },
+      {
+        id: "choice-3",
+        type: "選擇題",
+        num: "第 3 題",
+        title: "選擇題 第 3 題",
+        ans: "(B)",
+        step1Keywords: "破題關鍵字：多項式定義、零次多項式。",
+        paperGuide: null,
+        step2Formulas: [
+          "非零常數（如 $c \\ne 0$）稱為「零次多項式」（變數次數為 0）。",
+          "數字 0 稱為「零多項式」（不定義次數）。",
+          "多項式的次數由最高次項的指數決定；各項係數可為任意實數（包含負數）。"
+        ],
+        step3Questions: [
+          "多項式 $3x^2 - 5x + 1$ 中 $x$ 的最高次方是多少？它應該是幾次多項式？",
+          "非零常數 5 是否可以看作 $5x^0$？這代表它的次數是多少？而數字 0 在多項式分類中被特別稱為什麼？"
+        ]
+      },
+      {
+        id: "choice-4",
+        type: "選擇題",
+        num: "第 4 題",
+        title: "選擇題 第 4 題",
+        ans: "(B)",
+        step1Keywords: "破題關鍵字：同類項加減、單項式除法與乘方。",
+        paperGuide: null,
+        step2Formulas: [
+          "同類項加減：係數相加減，變數與次方維持不變。",
+          "單項式除法：係數相除，同底數變數指數相減（$x^m \\div x^n = x^{m-n}$）。",
+          "積的乘方：$(ax)^n = a^n \\cdot x^n$。"
+        ],
+        step3Questions: [
+          "同類項相加（如 $4x + 2x$ 或 $7x - x$）時，改變的是前面的係數還是變數 $x$ 的次方？",
+          "計算 $(5x)^2$ 時，括號內的數字 5 和變數 $x$ 是否都需要各自平方？$5^2$ 計算出來是多少？"
+        ]
+      },
+      {
+        id: "choice-5",
+        type: "選擇題",
+        num: "第 5 題",
+        title: "選擇題 第 5 題",
+        ans: "(D)",
+        step1Keywords: "破題關鍵字：多項式除法、餘式。",
+        paperGuide: null,
+        step2Formulas: [
+          "被除式 $=$ 除式 $\\times$ 商式 $+$ 餘式。",
+          "多項式除法中，餘式的次數必須嚴格小於除式的次數（或餘式為 0）。"
+        ],
+        step3Questions: [
+          "將 $(6x^2 + 8x + 10)$ 的前兩項分別除以 $2x$，能否分別整除得到 $3x$ 與 $4$？",
+          "最後一項常數項 10 的次數（0 次）是否小於除式 $2x$ 的次數（1 次）？無法再被 $2x$ 整除所留下來的數值是什麼？"
+        ]
+      },
+      {
+        id: "choice-6",
+        type: "選擇題",
+        num: "第 6 題",
+        title: "選擇題 第 6 題",
+        ans: "(C)",
+        step1Keywords: "破題關鍵字：正方形周長、單項式乘以多項式。",
+        paperGuide: null,
+        step2Formulas: [
+          "正方形周長 $=$ 邊長 $\\times 4$。",
+          "分配律：$4 \\cdot (ax + b) = 4ax + 4b$。"
+        ],
+        step3Questions: [
+          "求正方形周長時，是要將邊長平方（求面積）還是將邊長乘以 4？",
+          "將邊長 $(2x + 3)$ 乘以 4 時，利用分配律展開，$4 \\times 2x$ 與 $4 \\times 3$ 合併後的算式為何？"
+        ]
+      },
+      {
+        id: "choice-7",
+        type: "選擇題",
+        num: "第 7 題",
+        title: "選擇題 第 7 題",
+        ans: "(A)",
+        step1Keywords: "破題關鍵字：代換法、和的平方公式。",
+        paperGuide: null,
+        step2Formulas: [
+          "將 $b = a + 6$ 代入可得：$ab + 9 = a(a + 6) + 9 = a^2 + 6a + 9$。",
+          "和的平方公式：$a^2 + 6a + 9 = (a + 3)^2$。"
+        ],
+        step3Questions: [
+          "將 $b = a + 6$ 代入 $ab + 9$ 展開後，能否利用乘法公式將其配成全平方式 $(a + 3)^2$？",
+          "若 $ab + 9 = (a + 3)^2$，哪一個選項的值（例如 $34^2$）開根號取底數 34 再減去 3 後，能得到質數 $a = 31$？"
+        ]
+      },
+      {
+        id: "choice-8",
+        type: "選擇題",
+        num: "第 8 題",
+        title: "選擇題 第 8 題",
+        ans: "(B)",
+        step1Keywords: "破題關鍵字：變數代換法、平方展開。",
+        paperGuide: null,
+        step2Formulas: [
+          "令 $x = 2026$，則 $2027 = x + 1$，$2025 = x - 1$。",
+          "展開式：$(x + 1)^2 = x^2 + 2x + 1$；$(x - 1)^2 = x^2 - 2x + 1$。"
+        ],
+        step3Questions: [
+          "若設 $x = 2026$，將原式改寫為 $2(x^2 - 1) - (x + 1)^2 - (x - 1)^2$，展開去括號時要注意哪些符號變換？",
+          "去括號後，二次項 $2x^2 - x^2 - x^2$ 與一次項 $-2x + 2x$ 是否互相抵消？最後留下的常數項總和是多少？"
+        ]
+      },
+      {
+        id: "choice-9",
+        type: "選擇題",
+        num: "第 9 題",
+        title: "選擇題 第 9 題",
+        ans: "(D)",
+        step1Keywords: "破題關鍵字：平方差公式拆解。",
+        paperGuide: null,
+        step2Formulas: [
+          "平方差公式：$A^2 - B^2 = (A - B)(A + B)$。"
+        ],
+        step3Questions: [
+          "運用平方差公式拆解選項 (A) $(109^2-1^2)(105^2-1^2)$，可以化簡為哪四個整數相乘？",
+          "分別拆解選項 (B)、(C) 與 (D)，哪三個選項拆出來的四個相乘數值完全相同（均為 $104 \\times 106 \\times 108 \\times 110$）？哪一個選項拆出重複或不同的數值？"
+        ]
+      },
+      {
+        id: "choice-10",
+        type: "選擇題",
+        num: "第 10 題",
+        title: "選擇題 第 10 題",
+        ans: "(D)",
+        step1Keywords: "破題關鍵字：長除法、通關式定義。",
+        paperGuide: "請對照【紙本考卷】選擇第 10 題情境段落，特別注意題目定義的「通關式」計算規則：必須先算出「商式」與「餘式」，最後進行「相加」。",
+        step2Formulas: [
+          "被除式除以除式得到商式與餘式：被除式 $=$ 除式 $\\times$ 商式 $+$ 餘式。",
+          "通關式 $=$ 商式 $+$ 餘式。"
+        ],
+        step3Questions: [
+          "利用多項式長除法將 $(4x^2 - 3x - 4)$ 除以 $(x + 2)$，求得的「商式」與「餘式」分別是多少？",
+          "依闖關卡規則，將求得的商式與餘式進行相加合併，最後整理出的通關多項式為何？"
+        ]
+      },
+
+      // --- 填充題 1-13 ---
+      {
+        id: "fill-1",
+        type: "填充題",
+        num: "第 1 題",
+        title: "填充題 第 1 題",
+        ans: "89401",
+        step1Keywords: "破題關鍵字：差的平方公式簡化計算。",
+        paperGuide: null,
+        step2Formulas: [
+          "$(a - b)^2 = a^2 - 2ab + b^2$。"
+        ],
+        step3Questions: [
+          "299 可以拆成哪兩個整數相減（如整百數減去個位數）？",
+          "套用公式 $(300 - 1)^2 = 300^2 - 2 \\times 300 \\times 1 + 1^2$，計算出的數值是多少？"
+        ]
+      },
+      {
+        id: "fill-2",
+        type: "填充題",
+        num: "第 2 題",
+        title: "填充題 第 2 題",
+        ans: "3600",
+        step1Keywords: "破題關鍵字：和的平方公式逆用。",
+        paperGuide: null,
+        step2Formulas: [
+          "$a^2 + 2ab + b^2 = (a + b)^2$。"
+        ],
+        step3Questions: [
+          "觀察算式 $37^2 + 2 \\times 37 \\times 23 + 23^2$，若設 $a = 37$、$b = 23$，這符合哪一個乘法公式的展開形式？",
+          "先將 $(37 + 23)$ 相加湊成整百數，再進行平方計算，答案是多少？"
+        ]
+      },
+      {
+        id: "fill-3",
+        type: "填充題",
+        num: "第 3 題",
+        title: "填充題 第 3 題",
+        ans: "117000",
+        step1Keywords: "破題關鍵字：平方差公式。",
+        paperGuide: null,
+        step2Formulas: [
+          "$a^2 - b^2 = (a - b)(a + b)$。"
+        ],
+        step3Questions: [
+          "算式 $345^2 - 45^2$ 符合哪一個乘法公式的結構？",
+          "將其拆成 $(345 - 45) \\times (345 + 45)$ 後，兩個括號相減與相加的結果分別是多少？兩數相乘後答案為何？"
+        ]
+      },
+      {
+        id: "fill-4",
+        type: "填充題",
+        num: "第 4 題",
+        title: "填充題 第 4 題",
+        ans: "$4x^3 + 8x^2 - x - 2$",
+        step1Keywords: "破題關鍵字：多項式降冪排列。",
+        paperGuide: null,
+        step2Formulas: [
+          "降冪排列：將多項式各項依照變數 $x$ 的指數由大到小（高次到低次）依序排列，常數項放在最後。"
+        ],
+        step3Questions: [
+          "觀察多項式 $8x^2 - 2 + 4x^3 - x$ 中的每一項，它們對應的 $x$ 次數分別是多少？",
+          "從次數最高的「三次項」開始，依序降冪排列至「常數項」，並注意每一項前面的正負號，寫出的式子為何？"
+        ]
+      },
+      {
+        id: "fill-5",
+        type: "填充題",
+        num: "第 5 題",
+        title: "填充題 第 5 題",
+        ans: "-5",
+        step1Keywords: "破題關鍵字：和/差的平方公式構造。",
+        paperGuide: null,
+        step2Formulas: [
+          "$(a + b)^2 = a^2 + 2ab + b^2$。"
+        ],
+        step3Questions: [
+          "把 995 看成 $(1000 - 5)$，或者看成 $[1000 + (-5)]$ 時，展開的中間項 $2ab$ 應寫成 $2 \\times 1000 \\times (\\text{？})$？",
+          "對照題目格式 $1000^2 + 2 \\times 1000 \\times \\square + 5^2$，方框 $\\square$ 內應填入帶有什麼符號的數字？"
+        ]
+      },
+      {
+        id: "fill-6",
+        type: "填充題",
+        num: "第 6 題",
+        title: "填充題 第 6 題",
+        ans: "$4x^2 + 5$",
+        step1Keywords: "破題關鍵字：多項式加法、同類項合併。",
+        paperGuide: null,
+        step2Formulas: [
+          "多項式加法：直接去括號，將相同次數的同類項（二次項、一次項、常數項）分別相加。"
+        ],
+        step3Questions: [
+          "去括號後，二次項 $3x^2 + x^2$ 相加結果是多少？一次項 $+2x - 2x$ 相加後會變成多少？",
+          "常數項 $-1 + 6$ 計算結果是多少？整理合併後的多項式為何？"
+        ]
+      },
+      {
+        id: "fill-7",
+        type: "填充題",
+        num: "第 7 題",
+        title: "填充題 第 7 題",
+        ans: "$2x^2 + 1$",
+        step1Keywords: "破題關鍵字：多項式減法、去括號變號。",
+        paperGuide: null,
+        step2Formulas: [
+          "去括號負號分配律：$-(a - b - c) = -a + b + c$。"
+        ],
+        step3Questions: [
+          "拆開減號後面的括號 $-(5x^2 - x - 4)$ 時，括號內三項的符號應如何變換？",
+          "將同類項 $7x^2 - 5x^2$、$-x + x$ 與 $-3 + 4$ 分別合併，得到的最終式子為何？"
+        ]
+      },
+      {
+        id: "fill-8",
+        type: "填充題",
+        num: "第 8 題",
+        title: "填充題 第 8 題",
+        ans: "$16x^2 + 56x + 49$",
+        step1Keywords: "破題關鍵字：和的平方展開。",
+        paperGuide: null,
+        step2Formulas: [
+          "$(a + b)^2 = a^2 + 2ab + b^2$。"
+        ],
+        step3Questions: [
+          "將 $(4x + 7)^2$ 套用和的平方公式，首項 $a^2$ 應填入 $(4x)^2$，末項 $b^2$ 應填入 $7^2$，分別計算是多少？",
+          "中間項 $2ab = 2 \\times (4x) \\times 7$ 計算出來的係數是多少？三項組合後的完整多項式為何？"
+        ]
+      },
+      {
+        id: "fill-9",
+        type: "填充題",
+        num: "第 9 題",
+        title: "填充題 第 9 題",
+        ans: "-8",
+        step1Keywords: "破題關鍵字：除法原理、餘式求解。",
+        paperGuide: null,
+        step2Formulas: [
+          "被除式 $=$ 除式 $\\times$ 商式 $+$ 餘式。",
+          "餘式定理或長除法運算。"
+        ],
+        step3Questions: [
+          "利用長除法將 $(2x^2 - 5x + a)$ 除以 $(x - 4)$，商式的前兩項分別放 $2x$ 與多少？",
+          "長除法最後算出的數值餘式（包含 $a$ 的算式）為何？若已知餘式等於 4，反推可得 $a$ 的值是多少？"
+        ]
+      },
+      {
+        id: "fill-10",
+        type: "填充題",
+        num: "第 10 題",
+        title: "填充題 第 10 題",
+        ans: "$5x^2$",
+        step1Keywords: "破題關鍵字：多項式同類項合併、單項式係數。",
+        paperGuide: null,
+        step2Formulas: [
+          "先化簡多項式 $B$ 的同類項：$B = -2x^2 + 3x - 4$（二次項合併後為 $-2x^2$）。",
+          "設單項式 $A = kx^2$，則 $A - B$ 的二次項係數為 $k - (-2) = k + 2$。"
+        ],
+        step3Questions: [
+          "觀察多項式 $B = -2x^2 + 3x - 4$，它的二次項係數是多少？",
+          "若 $A$ 為二次單項式 $kx^2$，計算 $A - B$ 時，二次項係數為 $k - (-2) = 7$，則 $k$ 的值是多少？單項式 $A$ 為何？"
+        ]
+      },
+      {
+        id: "fill-11",
+        type: "填充題",
+        num: "第 11 題",
+        title: "填充題 第 11 題",
+        ans: "996000",
+        step1Keywords: "破題關鍵字：等式移項、平方差公式。",
+        paperGuide: null,
+        step2Formulas: [
+          "移項得：$k = 998^2 - 4 = 998^2 - 2^2$。",
+          "平方差公式：$a^2 - b^2 = (a - b)(a + b)$。"
+        ],
+        step3Questions: [
+          "將等式 $998^2 = k + 4$ 中的 4 移項到左邊，可將 $k$ 表示為哪兩個數值的平方差？",
+          "將 $998^2 - 2^2$ 寫成 $(998 - 2)(998 + 2)$ 後，計算出的 $k$ 值是多少？"
+        ]
+      },
+      {
+        id: "fill-12",
+        type: "填充題",
+        num: "第 12 題",
+        title: "填充題 第 12 題",
+        ans: "$3x^2 + 5x - 3$",
+        step1Keywords: "破題關鍵字：除法原理、被除式還原。",
+        paperGuide: null,
+        step2Formulas: [
+          "$\\text{被除式 } A = \\text{除式} \\times \\text{商式} + \\text{餘式} = (3x - 4)(x + 3) + 9$。"
+        ],
+        step3Questions: [
+          "依除法原理，如何用除式 $(3x - 4)$、商式 $(x + 3)$ 與餘式 9 列出還原多項式 $A$ 的算式？",
+          "將 $(3x - 4)(x + 3)$ 利用展開式拆開並加上 9，合併同類項後得到的多項式 $A$ 為何？"
+        ]
+      },
+      {
+        id: "fill-13",
+        type: "填充題",
+        num: "第 13 題",
+        title: "填充題 第 13 題",
+        ans: "$17x^2 + 19x - 18$",
+        step1Keywords: "破題關鍵字：扣除面積、多項式乘法與減法。",
+        paperGuide: "請對照【紙本考卷】填充第 13 題圖形，特別觀察大長方形木門的長寬標示（寬 $3x-2$、高 $7x+11$），以及門上 4 塊相同尺寸的玻璃（每塊寬 $x-1$、高 $x+1$）。",
+        step2Formulas: [
+          "$\\text{油漆面積} = \\text{木門總面積} - 4 \\times (\\text{單塊玻璃面積})$。",
+          "長方形面積 $=$ 寬 $\\times$ 高。"
+        ],
+        step3Questions: [
+          "木門總面積用 $(3x - 2)(7x + 11)$ 展開後的式子為何？4 塊玻璃的總面積用 $4(x - 1)(x + 1)$ 展開後的式子為何？",
+          "將木門總面積減去 4 塊玻璃總面積，正確去括號並合併同類項後，剩下的油漆面積多項式為何？"
+        ]
+      },
+
+      // --- 綜合題 1-3 ---
+      {
+        id: "comp-1",
+        type: "綜合題",
+        num: "第 1 題",
+        title: "綜合題 第 1 題",
+        ans: "二次項係數為 3，常數項為 7",
+        step1Keywords: "破題關鍵字：多項式各項名稱與係數辨識。",
+        paperGuide: null,
+        step2Formulas: [
+          "包含變數二次方（$x^2$）的項稱為「二次項」，其前面的數值稱為「二次項係數」。",
+          "不含變數 $x$ 的純數值項稱為「常數項」。"
+        ],
+        step3Questions: [
+          "在多項式 $7 + 3x^2 - 2x^3 - x$ 中，含有 $x^2$ 的那一項前面的數字（含符號）是多少？",
+          "式子中哪一個數字完全沒有帶有變數 $x$？它對應的是什麼項？"
+        ]
+      },
+      {
+        id: "comp-2",
+        type: "綜合題",
+        num: "第 2 題",
+        title: "綜合題 第 2 題",
+        ans: "(1) $(x - 3)^2 = x^2 - 6x + 9$ (2) $12x$ (3) 204",
+        step1Keywords: "破題關鍵字：正方形面積、和/差的平方公式、面積相減。",
+        paperGuide: "請對照【紙本考卷】綜合題第 2 題長文本敘述，特別觀察邊長變化的條件：原本正方形邊長為 $x$，邊長增加 3 公尺後成為大正方形綠地；中央預留的活動廣場邊長則為 $(x-3)$。",
+        step2Formulas: [
+          "正方形面積 $=$ 邊長$^2$。",
+          "$\\text{純草皮面積} = \\text{大正方形面積} - \\text{活動廣場面積} = (x + 3)^2 - (x - 3)^2$。"
+        ],
+        step3Questions: [
+          "第 (1) 小題中，中央活動廣場邊長為 $(x - 3)$，將其平方展開後的多項式為何？",
+          "第 (2) 小題中，大正方形邊長為 $(x + 3)$，用大正方形面積 $(x + 3)^2$ 減去廣場面積 $(x - 3)^2$，化簡後的簡捷式子為何？當 $x = 17$ 代入時數值是多少？"
+        ]
+      },
+      {
+        id: "comp-3",
+        type: "綜合題",
+        num: "第 3 題",
+        title: "綜合題 第 3 題",
+        ans: "(1) $(3x - 1)$ (2) 符合規格一 (3) 不符合規格二",
+        step1Keywords: "破題關鍵字：長方形面積除法、長寬比較、周長與規格驗證。",
+        paperGuide: "請對照【紙本考卷】綜合題第 3 題長文本與規格條件，特別注意規格一的要求（長比寬至少多 5 公分，即 長 $-$ 寬 $\\ge 5$）與規格二的要求（一周長度不得超過 120 公分，即 周長 $\\le 120$）。",
+        step2Formulas: [
+          "$\\text{長} = \\text{面積} \\div \\text{寬} = (6x^2 + 13x - 5) \\div (2x + 5)$。",
+          "$\\text{周長} = 2 \\times (\\text{長} + \\text{寬})$。"
+        ],
+        step3Questions: [
+          "第 (1) 小題中，利用多項式長除法將面積 $(6x^2 + 13x - 5)$ 除以寬 $(2x + 5)$，求得的商式（長）是多少？",
+          "當 $x = 12$ 時，分別算出長與寬的實際公分數，兩者相差幾公分？一圈周長又是幾公分？對照規格一（相差 $\\ge 5$）與規格二（周長 $\\le 120$）分別是否符合？"
+        ]
+      }
+    ];
+
+    // ==========================================
+    // 2. State & Dynamic Storage
+    // ==========================================
+    let currentIndex = 0;
+    const completedQuestions = new Set();
+    const chatHistories = {};
+
+    questionDatabase.forEach(q => {
+      chatHistories[q.id] = [];
+    });
+
+    // ==========================================
+    // 3. KaTeX Helper Rendering
+    // ==========================================
+    function triggerKaTeX(element = document.body) {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(element, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // ==========================================
+    // 4. UI Initialization & Navigation
+    // ==========================================
+    window.onload = function() {
+      renderNavButtons();
+      loadQuestion(0);
+    };
+
+    function renderNavButtons() {
+      const choiceContainer = document.getElementById('choice-buttons');
+      const fillContainer = document.getElementById('fill-buttons');
+      const compContainer = document.getElementById('comp-buttons');
+
+      choiceContainer.innerHTML = '';
+      fillContainer.innerHTML = '';
+      compContainer.innerHTML = '';
+
+      questionDatabase.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        btn.id = `nav-btn-${q.id}`;
+        btn.onclick = () => loadQuestion(idx);
+        btn.className = `px-3 py-1.5 text-xs font-bold rounded-xl border-2 transition-all duration-150 flex items-center justify-center min-w-[38px] shadow-2xs ${getNavBtnStyle(idx)}`;
+        btn.innerText = q.num.replace('第 ', '').replace(' 題', '');
+
+        if (q.type === '選擇題') choiceContainer.appendChild(btn);
+        else if (q.type === '填充題') fillContainer.appendChild(btn);
+        else if (q.type === '綜合題') compContainer.appendChild(btn);
+      });
+    }
+
+    function getNavBtnStyle(idx) {
+      const q = questionDatabase[idx];
+      const isCompleted = completedQuestions.has(q.id);
+      const isCurrent = idx === currentIndex;
+
+      if (isCurrent) {
+        return 'bg-cozy-terracotta text-white border-cozy-terracotta shadow-doodle-sm scale-105';
+      } else if (isCompleted) {
+        return 'bg-cozy-sage text-white border-emerald-600 font-bold hover:bg-emerald-600';
+      } else {
+        return 'bg-white text-cozy-text border-cozy-border hover:bg-amber-50 hover:border-amber-300';
+      }
+    }
+
+    function updateNavStyles() {
+      questionDatabase.forEach((q, idx) => {
+        const btn = document.getElementById(`nav-btn-${q.id}`);
+        if (btn) btn.className = `px-3 py-1.5 text-xs font-bold rounded-xl border-2 transition-all duration-150 flex items-center justify-center min-w-[38px] shadow-2xs ${getNavBtnStyle(idx)}`;
+      });
+      document.getElementById('completed-count').innerText = completedQuestions.size;
+      const progressPercent = Math.round((completedQuestions.size / 26) * 100);
+      document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+    }
+
+    function loadQuestion(index) {
+      currentIndex = index;
+      const q = questionDatabase[index];
+
+      // Reset Answer Box
+      document.getElementById('answer-box').classList.add('hidden');
+      document.getElementById('toggle-answer-btn').classList.remove('hidden');
+
+      // Update Left Panel Details
+      document.getElementById('current-type-badge').innerText = q.type;
+      document.getElementById('current-question-title').innerText = q.num;
+      document.getElementById('current-answer-text').innerText = q.ans;
+      document.getElementById('step1-keywords').innerText = q.step1Keywords;
+
+      // Paper Guidance Box
+      const paperGuideBox = document.getElementById('step1-paper-guide');
+      if (q.paperGuide) {
+        document.getElementById('step1-paper-guide-text').innerText = q.paperGuide;
+        paperGuideBox.classList.remove('hidden');
+      } else {
+        paperGuideBox.classList.add('hidden');
+      }
+
+      // Step 2 Concepts
+      const formulaList = document.getElementById('step2-formula-list');
+      formulaList.innerHTML = '';
+      q.step2Formulas.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = item;
+        formulaList.appendChild(li);
+      });
+
+      // Step 3 Questions
+      document.getElementById('step3-q1').innerHTML = q.step3Questions[0];
+      document.getElementById('step3-q2').innerHTML = q.step3Questions[1];
+
+      // Collapsible default
+      document.getElementById('step2-concept-box').classList.add('hidden');
+      document.getElementById('concept-toggle-text').innerText = '展開觀念手帳';
+      document.getElementById('concept-toggle-icon').style.transform = 'rotate(0deg)';
+
+      updateNavStyles();
+
+      setTimeout(() => triggerKaTeX(document.body), 50);
+
+      if (chatHistories[q.id].length === 0) {
+        sendAIGreeting(q);
+      } else {
+        renderChatMessages();
+      }
+    }
+
+    function toggleAnswer() {
+      const box = document.getElementById('answer-box');
+      box.classList.toggle('hidden');
+      triggerKaTeX(box);
+    }
+
+    function toggleConcept() {
+      const box = document.getElementById('step2-concept-box');
+      const text = document.getElementById('concept-toggle-text');
+      const icon = document.getElementById('concept-toggle-icon');
+
+      if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        text.innerText = '收起觀念手帳';
+        icon.style.transform = 'rotate(180deg)';
+        triggerKaTeX(box);
+      } else {
+        box.classList.add('hidden');
+        text.innerText = '展開觀念手帳';
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // ==========================================
+    // 5. AI Chat Core Integration (Gemini 3 Flash)
+    // ==========================================
+    function sendAIGreeting(q) {
+      const greetingText = `👋 哈囉同學！歡迎來到 **【${q.type} ${q.num}】**（請搭配你的紙本考卷喔！）。\n\n你可以看一下左側手帳裡的【破題提示】與【觀念】，試著思考【第三步】的引導問句：\n👉 **思考問句一：** ${q.step3Questions[0]}\n\n放輕鬆不用怕寫錯，在下方對話框寫下你的想法，我們一起聊聊吧！`;
+      
+      chatHistories[q.id].push({
+        role: 'model',
+        text: greetingText
+      });
+      renderChatMessages();
+    }
+
+    function renderChatMessages() {
+      const chatContainer = document.getElementById('chat-messages');
+      chatContainer.innerHTML = '';
+
+      const q = questionDatabase[currentIndex];
+      const history = chatHistories[q.id];
+
+      history.forEach(msg => {
+        const bubble = document.createElement('div');
+        bubble.className = `flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+        if (msg.role === 'user') {
+          bubble.innerHTML = `
+            <div class="max-w-[80%] bg-cozy-terracotta text-white px-4 py-3 rounded-3xl rounded-tr-none text-sm font-medium shadow-doodle-sm leading-relaxed">
+              ${escapeHTML(msg.text)}
+            </div>
+            <div class="w-9 h-9 rounded-2xl bg-amber-200 border-2 border-cozy-border flex items-center justify-center text-sm font-bold text-cozy-text shrink-0 shadow-2xs">
+              你
+            </div>
+          `;
+        } else {
+          bubble.innerHTML = `
+            <div class="w-9 h-9 rounded-2xl bg-cozy-navy border-2 border-cozy-navy flex items-center justify-center text-white text-base font-bold shrink-0 shadow-doodle-sm">
+              🤖
+            </div>
+            <div class="max-w-[85%] bg-white border-2 border-cozy-border text-cozy-text px-4 py-3.5 rounded-3xl rounded-tl-none text-sm shadow-doodle-sm leading-relaxed space-y-2">
+              ${formatMarkdown(msg.text)}
+            </div>
+          `;
+        }
+        chatContainer.appendChild(bubble);
+      });
+
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      setTimeout(() => triggerKaTeX(chatContainer), 50);
+    }
+
+    function quickReply(text) {
+      const input = document.getElementById('chat-input');
+      input.value = text;
+      input.focus();
+    }
+
+    function resetChatHistory() {
+      const q = questionDatabase[currentIndex];
+      chatHistories[q.id] = [];
+      sendAIGreeting(q);
+    }
+
+    async function handleUserSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      const q = questionDatabase[currentIndex];
+
+      chatHistories[q.id].push({
+        role: 'user',
+        text: userText
+      });
+
+      input.value = '';
+      renderChatMessages();
+
+      document.getElementById('ai-loading').classList.remove('hidden');
+
+      try {
+        const aiResponseText = await callGeminiAPI(q, chatHistories[q.id]);
+        
+        chatHistories[q.id].push({
+          role: 'model',
+          text: aiResponseText
+        });
+
+        if (aiResponseText.includes("觀念通了") || aiResponseText.includes("答案完全正確") || aiResponseText.includes("答對了") || aiResponseText.includes("恭喜")) {
+          completedQuestions.add(q.id);
+          updateNavStyles();
+        }
+
+      } catch (err) {
+        console.error("Gemini API Error:", err);
+        chatHistories[q.id].push({
+          role: 'model',
+          text: '⚠️ 抱歉，網路較為忙碌。請再嘗試傳送一次，或將想法簡化看看！'
+        });
+      } finally {
+        document.getElementById('ai-loading').classList.add('hidden');
+        renderChatMessages();
+      }
+    }
+
+    // ==========================================
+    // 6. Gemini API Fetch & System Instruction
+    // ==========================================
+    async function callGeminiAPI(q, conversationHistory) {
+      const apiKey = ""; // Managed by runtime environment
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const systemPrompt = `你是一位親切、溫暖、有耐心的國二數學 AI 專屬教練（翠翎老師精心設計的對話教練）。
+學生目前正在搭配「紙本考卷」自主訂正：【${q.type} ${q.num}】
+- 題目類型與正解：${q.num} / 正解為：${q.ans}
+- 破題關鍵字：${q.step1Keywords}
+- 核心公式與概念：${q.step2Formulas.join('； ')}
+- 第三步引導問句一：${q.step3Questions[0]}
+- 第三步引導問句二：${q.step3Questions[1]}
+
+【重要語法規範 - 數學式 LaTeX 渲染】：
+1. 所有的數學符號、算式、變數（如 x, a, b）、分數（如 $\\frac{a}{b}$）、平方（如 $x^2$）、根號（如 $\\sqrt{x}$）必須**一律使用標準 LaTeX 格式**！
+2. 行內公式使用 $...$，獨立區塊使用 $$...$$。
+
+【教學對話四階段邏輯】：
+階段一【思維引導】：
+- 當學生回答問句時，給予親切有溫度的鼓勵與針對性點撥。若學生觀念有誤，溫柔指出其卡關處，引導其推導出正解。
+- 嚴禁直接說出答案選項字母或最終數值，必須讓學生自己講出！
+
+階段二【通關結算與類題邀約】：
+- 當學生推導出正解時，讚賞學生並總結 1 句核心觀念。
+- 務必主動詢問這句話：「觀念通了！要不要挑戰一題『平行類似題』確認自己徹底搞懂？（請回答：好 / 下一題）」
+
+階段三【現場出題與批改】：
+- 若學生回答「好」或想挑戰：依據原題觀念，現場生成 1 道「難度相當、觀念相同但數字改變」的簡短文字選擇題或計算題請學生回答。
+- 學生作答後，立即給予批改、詳解與肯定。
+
+階段四【收尾導流】：
+- 完成類題後，提示：「這題訂正完成！請在上方點選下一題繼續訂正。」`;
+
+      const contents = conversationHistory.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.text }]
+      }));
+
+      const payload = {
+        contents: contents,
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        }
+      };
+
+      let retries = 0;
+      const maxRetries = 3;
+      let delay = 1000;
+
+      while (retries <= maxRetries) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (replyText) {
+            return replyText;
+          } else {
+            throw new Error("Invalid API response format");
+          }
+
+        } catch (error) {
+          retries++;
+          if (retries > maxRetries) {
+            throw error;
+          }
+          await new Promise(res => setTimeout(res, delay));
+          delay *= 2;
+        }
+      }
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    function formatMarkdown(text) {
+      let formatted = text
+        .replace(/\n\n/g, '<br/><br/>')
+        .replace(/\n/g, '<br/>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      return formatted;
+    }
+  </script>
+</body>
+</html>
